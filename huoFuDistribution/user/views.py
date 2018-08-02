@@ -39,7 +39,7 @@ def add_company(request):
             return HttpResponse(json.dumps(result))
 
 
-def inquire_order(request):
+def inquire_companys(request):
     """筛选查询功能"""
     companys = models.Company.objects.all()
     if request.GET.get('cname', ''):
@@ -51,6 +51,24 @@ def inquire_order(request):
     # result = {'companys', companys}
     return render(request,'company.html',locals())
 
+
+def update_companys(request):
+    """修改企业信息"""
+    company = models.Company.objects.get(id=request.POST['company_id'])
+    if request.POST.get('cname',''):
+        company.cname = request.POST['cname']
+    if request.POST.get('number',''):
+        company.number = request.POST['number']
+    if request.POST.get('is_active',''):
+        company.is_active = request.POST['is_active']
+    try:
+        company.save()
+    except DatabaseError as e:
+        logging.warning(e)
+        result = {'response':'修改异常,请重新操作'}
+        return HttpResponse(json.dumps(result))
+    result = {'response': '修改成功,请刷新'}
+    return HttpResponse(json.dumps(result))
 
 
 
