@@ -1,3 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render,HttpResponse
 
-# Create your views here.
+
+def test(request):
+    """测试通迅"""
+    return HttpResponse('this is test oreder,is okay')

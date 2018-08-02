@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>$Title$</title>
+</head>
+<body>
+{% for company in companys %}
+    企业名：{{company.cname}}
+    企业编号：{{company.number}}
+    启用壮态：{{company.is_active}}
+    <br>
+{% endfor %}
+</body>
+</html>
