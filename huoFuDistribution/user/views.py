@@ -71,7 +71,34 @@ def update_companys(request):
     return HttpResponse(json.dumps(result))
 
 
+def inquire_limits(request):
+    """查询功能权限列表"""
+    limits = models.Limits.objects.all()
+    return render(request,'inquire_limits.html',locals())
+
+
+def add_limits(request):
+    """添加功能权限"""
+    if request.POST.get('lname','') and request.POST.get('limit',''):
+        if not models.Limits.objects.filter(limit=request.POST['limit']):
+            newLimit = models.Limits(lname=request.POST['lname'],limit=request.POST['limit'])
+            try:
+                newLimit.save()
+            except DatabaseError as e:
+                logging.warning(e)
+                result = {'response': '添加权限未知异常'}
+                return HttpResponse(json.dumps(result))
+            result = {'response': '添加权限成功'}
+            return HttpResponse(json.dumps(result))
+
+        else:
+            result = {'response': '权限标识已存在'}
+            return HttpResponse(json.dumps(result))
+    else:
+        result = {'response':'权限描述与权限标识不能为空'}
+        return HttpResponse(json.dumps(result))
+
 
 def register(request):
-    """注册功能"""
+    """用户注册功能"""
     pass

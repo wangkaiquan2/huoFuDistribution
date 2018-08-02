@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>inquire_limits</title>
+</head>
+<body>
+    {% for limit in limits %}
+        权限描述：{{limit.lname}}
+        权限标识:{{limit.limit}}
+        <br>
+    {% endfor %}
+</body>
+</html>
