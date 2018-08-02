@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>inquire_user_limit</title>
+</head>
+<body>
+    id:{{id}}
+    用户名：{{uname}}
+    企业名：{{company}}
+    启用壮态：{{is_active}}
+    {% for ulimit in ulimits %}
+        权限描述：{{ulimit.lname}} 权限标识{{ulimit.limit}}
+    {% endfor %}
+</body>
+</html>

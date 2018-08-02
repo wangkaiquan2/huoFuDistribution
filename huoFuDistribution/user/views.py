@@ -142,4 +142,11 @@ def inquire_user(request):
 
 def inquire_user_limit(request):
     """用户权限查询"""
-    pass
+    id = request.GET.get('id','')
+    uname = request.GET.get('uname','')
+    company = request.GET.get('company','')
+    is_active = request.GET.get('is-active','')
+    user = models.User.objects.get(id=id)
+    ulimits = user.limits.all()
+    return render(request,'inquire_user_limit.html',locals())
+
