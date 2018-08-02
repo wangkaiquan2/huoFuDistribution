@@ -101,4 +101,28 @@ def add_limits(request):
 
 def register(request):
     """用户注册功能"""
-    pass
+    if request.method == 'GET':
+        return render(request,'register.html')
+    else:
+        if request.POST.get('uname','') and request.POST.get('password','') and request.POST.get('company',''):
+            if request.POST['password'] == request.POST['password_1']:
+                if not models.User.objects.filter(uname=request.POST['uname']):
+                    password = make_password(request.POST['password'],None,'pbkdf2_sha1')
+                    newUser = models.User(uname=request.POST['uname'],password=password,company_id=request.POST['company'])
+                    try:
+                        newUser.save()
+                    except DatabaseError as e:
+                        logging.warning(e)
+                        result = {'response': '注册用户失败'}
+                        return HttpResponse(json.dumps(result))
+                    result = {'response': '注册用户成功'}
+                    return HttpResponse(json.dumps(result))
+                else:
+                    result = {'response': '用户名已存在'}
+                    return HttpResponse(json.dumps(result))
+            else:
+                result = {'response': '密码不一致,请重新输入'}
+                return HttpResponse(json.dumps(result))
+        else:
+            result = {'response': '用户名、密码、企业不能为空'}
+            return HttpResponse(json.dumps(result))

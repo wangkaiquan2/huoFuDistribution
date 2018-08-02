@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^update-companys/',views.update_companys,name='update-companys'),
     url(r'^inquire-limits/',views.inquire_limits,name='inquire-limits'),
     url(r'^add-limits/',views.add_limits,name='add-limits'),
+    url(r'^register/',views.register,name='register'),
 ]
