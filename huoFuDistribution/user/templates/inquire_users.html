@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>inquire_users</title>
+</head>
+<body>
+    {% for user in users %}
+    用户名：{{user.uname}}
+    企业名：{{user.company}}
+    启用壮态：{{user.is_active}}
+    {% endfor %}
+</body>
+</html>

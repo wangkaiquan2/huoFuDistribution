@@ -126,3 +126,20 @@ def register(request):
         else:
             result = {'response': '用户名、密码、企业不能为空'}
             return HttpResponse(json.dumps(result))
+
+
+def inquire_user(request):
+    """用户查询"""
+    users = models.User.objects.all()
+    if request.GET.get('uname',''):
+        users = users.filter(uname=request.GET['uname'])
+    if request.GET.get('is_active',''):
+        users = users.filter(is_active=request.GET['is_active'])
+    if request.GET.get('company',''):
+        users = users.filter(company=request.GET['company'])
+    return render(request,'inquire_users.html',locals())
+
+
+def inquire_user_limit(request):
+    """用户权限查询"""
+    pass

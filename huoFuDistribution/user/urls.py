@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^inquire-limits/',views.inquire_limits,name='inquire-limits'),
     url(r'^add-limits/',views.add_limits,name='add-limits'),
     url(r'^register/',views.register,name='register'),
+    url(r'^inquire-user/',views.inquire_user,name='inquire-user'),
 ]
