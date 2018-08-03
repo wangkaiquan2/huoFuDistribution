@@ -1,5 +1,3 @@
-import datetime
-
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import DatabaseError
@@ -129,8 +127,27 @@ def register(request):
             return HttpResponse(json.dumps(result))
 
 
+def modify_user(request):
+    """用户信息修改"""
+    user = models.User.objects.get(id=request.POST.get('id', ''))
+    if request.POST.get('password', ''):
+        user.password = make_password(request.POST['password'], None, 'pbkdf2_sha1')
+    if request.POST.get('is_active', ''):
+        user.is_active = request.POST['is_active']
+    if request.POST.get('company', ''):
+        user.company_id = request.POST['company']
+    try:
+        user.save()
+    except DatabaseError as e:
+        logging.warning(e)
+        result = {'response': '信息修改失败'}
+        return HttpResponse(json.dumps(result))
+    result = {'response': '信息修改成功,请刷新'}
+    return HttpResponse(json.dumps(result))
+
+
 def inquire_user(request):
-    """用户查询"""
+    """用户搜索筛选查询"""
     users = models.User.objects.all()
     if request.GET.get('uname', ''):
         users = users.filter(uname=request.GET['uname'])
@@ -219,9 +236,35 @@ def login(request):
         return HttpResponse(json.dumps(result))
 
 
+def modify_password(request):
+    """修改密码"""
+    if request.POST.get('password', '') and request.POST.get('password_1', '') and request.POST.get('password_2', ''):
+        if request.POST['password_1'] == request.POST['password_2']:
+            user = models.User.objects.get(id=request.session['id'])
+            if check_password(request.POST['password'], user.password):
+                user.password = make_password(request.POST['password_1'], None, 'pbkdf2_sha1')
+                try:
+                    user.save()
+                except DatabaseError as e:
+                    logging.warning(e)
+                    result = {'response': '密码修改失败'}
+                    return HttpResponse(json.dumps(result))
+                result = {'response': '密码修改成功'}
+                return HttpResponse(json.dumps(result))
+            else:
+                result = {'response': '密码错误'}
+                return HttpResponse(json.dumps(result))
+        else:
+            result = {'response': '密码不一致'}
+            return HttpResponse(json.dumps(result))
+    else:
+        result = {'response': '选项不能为空'}
+        return HttpResponse(json.dumps(result))
+
+
 def test_session(request):
     """测试登陆session"""
-    if request.session.get('id','') and request.session.get('uname','') and request.session.get('limits',''):
+    if request.session.get('id', '') and request.session.get('uname', '') and request.session.get('limits', ''):
         id = request.session['id']
         uname = request.session['uname']
         limits = request.session['limits']
