@@ -179,3 +179,21 @@ def add_user_limits(request):
         else:
             result = {'response': '用户名或权限表不能为空'}
             return HttpResponse(json.dumps(result))
+
+
+def delete_user_limits(request):
+    """删除用户权限"""
+    user = models.User.objects.get(id=request.POST.get('id',''))
+    print(user)
+    user.limits.remove(*request.POST.getlist('limits',''))
+    result = {'response': '删除权限成功'}
+    return HttpResponse(json.dumps(result))
+
+
+
+
+
+
+
+
+
