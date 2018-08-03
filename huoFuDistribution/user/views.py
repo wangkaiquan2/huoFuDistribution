@@ -190,6 +190,42 @@ def delete_user_limits(request):
     return HttpResponse(json.dumps(result))
 
 
+def login(request):
+    """用户登陆功能"""
+    if request.POST.get('uname','') and request.POST.get('password',''):
+        user = models.User.objects.filter(uname=request.POST['uname'])
+        if user:
+            if check_password(request.POST['password'],user[0].password):
+                limits = []
+                for limit in user[0].limits.all():
+                    print('limit.limit:',limit.limit)
+                    limits.append(limit.limit)
+                print('limits:',limits)
+                request.session['id'] = user[0].id
+                print(user[0].id)
+                request.session['uname'] = user[0].uname
+                print(user[0].uname)
+                request.session['limits'] = limits
+                print(limits)
+                return render(request,'index.html')
+            else:
+                result = {'response': '用户名或密码错误'}
+                return HttpResponse(json.dumps(result))
+        else:
+            result = {'response': '用户不存在'}
+            return HttpResponse(json.dumps(result))
+    else:
+        result = {'response': '用户名或密码不能为空'}
+        return HttpResponse(json.dumps(result))
+
+
+def test_session(request):
+    """测试登陆session"""
+    id = request.session['id']
+    uname = request.session['uname']
+    limits = request.session['limits']
+    return JsonResponse({'id':id,'uname':uname,'limits':limits})
+
 
 
 
