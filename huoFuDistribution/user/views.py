@@ -1,6 +1,6 @@
 import datetime
 
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import DatabaseError
 import logging
@@ -183,31 +183,31 @@ def add_user_limits(request):
 
 def delete_user_limits(request):
     """删除用户权限"""
-    user = models.User.objects.get(id=request.POST.get('id',''))
+    user = models.User.objects.get(id=request.POST.get('id', ''))
     print(user)
-    user.limits.remove(*request.POST.getlist('limits',''))
+    user.limits.remove(*request.POST.getlist('limits', ''))
     result = {'response': '删除权限成功'}
     return HttpResponse(json.dumps(result))
 
 
 def login(request):
     """用户登陆功能"""
-    if request.POST.get('uname','') and request.POST.get('password',''):
+    if request.POST.get('uname', '') and request.POST.get('password', ''):
         user = models.User.objects.filter(uname=request.POST['uname'])
         if user:
-            if check_password(request.POST['password'],user[0].password):
+            if check_password(request.POST['password'], user[0].password):
                 limits = []
                 for limit in user[0].limits.all():
-                    print('limit.limit:',limit.limit)
+                    print('limit.limit:', limit.limit)
                     limits.append(limit.limit)
-                print('limits:',limits)
+                print('limits:', limits)
                 request.session['id'] = user[0].id
                 print(user[0].id)
                 request.session['uname'] = user[0].uname
                 print(user[0].uname)
                 request.session['limits'] = limits
                 print(limits)
-                return render(request,'index.html')
+                return render(request, 'index.html')
             else:
                 result = {'response': '用户名或密码错误'}
                 return HttpResponse(json.dumps(result))
@@ -221,15 +221,24 @@ def login(request):
 
 def test_session(request):
     """测试登陆session"""
-    id = request.session['id']
-    uname = request.session['uname']
-    limits = request.session['limits']
-    return JsonResponse({'id':id,'uname':uname,'limits':limits})
+    if request.session.get('id','') and request.session.get('uname','') and request.session.get('limits',''):
+        id = request.session['id']
+        uname = request.session['uname']
+        limits = request.session['limits']
+        return JsonResponse({'id': id, 'uname': uname, 'limits': limits})
+    else:
+        result = {'response': '未登陆'}
+        return HttpResponse(json.dumps(result))
 
 
-
-
-
-
-
-
+def quit(request):
+    """用户退出"""
+    if request.session.get('id', '') and request.session.get('uname', '') and request.session.get('limits', ''):
+        del request.session['id']
+        del request.session['uname']
+        del request.session['limits']
+        return redirect('/user/login')
+        # return render(request, 'index.html')
+    else:
+        return redirect('/user/login')
+        # return render(request, 'index.html')

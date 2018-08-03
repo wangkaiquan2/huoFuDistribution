@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^delete-user-limits/',views.delete_user_limits,name='delete-user-limits'),
     url(r'^login/',views.login,name='login'),
     url(r'^test-session/',views.test_session,name='test-session'),
+    url(r'^quit/',views.quit,name='quit'),
 ]
