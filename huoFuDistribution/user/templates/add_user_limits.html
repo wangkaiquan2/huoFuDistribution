@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>add_user_limits</title>
+</head>
+<body>
+<form action="{% url 'add-user-limits' %}" method="post">
+    {%csrf_token %}
+    <p><input type="text" name="id"></p>
+    </p><input type="checkbox" name="limits" value="1">1</p>
+    </p><input type="checkbox" name="limits" value="2">2</p>
+    </p><input type="checkbox" name="limits" value="3">3</p>
+    </p><input type="checkbox" name="limits" value="4">4</p>
+    </p><input type="submit" value="增加权限"></p>
+</form>
+
+</body>
+</html>

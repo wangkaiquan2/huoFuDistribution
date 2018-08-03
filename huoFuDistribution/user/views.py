@@ -154,6 +154,28 @@ def inquire_user_limit(request):
     is_active = request.GET.get('is-active', '')
     user = models.User.objects.get(id=id)
     ulimits = user.limits.all()
-    return render(request, 'inquire_user_limit.html', locals())
+    limits = []
+    for ulimit in ulimits:
+        limits.append({'lname': ulimit.lname, 'limit': ulimit.limit})
+    return JsonResponse({'id': id, 'uname': uname, 'company': company, 'is_active': is_active, 'ulimits': limits})
 
 
+def add_user_limits(request):
+    """增加用户权限"""
+    if request.method == 'GET':
+        return render(request, 'add_user_limits.html')
+    else:
+        if request.POST.get('id', '') and request.POST.get('limits', ''):
+            user = models.User.objects.get(id=request.POST['id'])
+            print('limits:', request.POST.getlist('limits'))
+            try:
+                user.limits.add(*request.POST.getlist('limits'))
+            except DatabaseError as e:
+                logging.warning(e)
+                result = {'response': '新增权限失败'}
+                return HttpResponse(json.dumps(result))
+            result = {'response': '新增权限成功'}
+            return HttpResponse(json.dumps(result))
+        else:
+            result = {'response': '用户名或权限表不能为空'}
+            return HttpResponse(json.dumps(result))
