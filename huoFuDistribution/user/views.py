@@ -49,23 +49,23 @@ def inquire_companys(request):
     if request.GET.get('is_active', ''):
         companys = companys.filter(is_active=request.GET['is_active'])
     # result = {'companys', companys}
-    return render(request,'company.html',locals())
+    return render(request, 'company.html', locals())
 
 
 def update_companys(request):
     """修改企业信息"""
     company = models.Company.objects.get(id=request.POST['company_id'])
-    if request.POST.get('cname',''):
+    if request.POST.get('cname', ''):
         company.cname = request.POST['cname']
-    if request.POST.get('number',''):
+    if request.POST.get('number', ''):
         company.number = request.POST['number']
-    if request.POST.get('is_active',''):
+    if request.POST.get('is_active', ''):
         company.is_active = request.POST['is_active']
     try:
         company.save()
     except DatabaseError as e:
         logging.warning(e)
-        result = {'response':'修改异常,请重新操作'}
+        result = {'response': '修改异常,请重新操作'}
         return HttpResponse(json.dumps(result))
     result = {'response': '修改成功,请刷新'}
     return HttpResponse(json.dumps(result))
@@ -74,14 +74,14 @@ def update_companys(request):
 def inquire_limits(request):
     """查询功能权限列表"""
     limits = models.Limits.objects.all()
-    return render(request,'inquire_limits.html',locals())
+    return render(request, 'inquire_limits.html', locals())
 
 
 def add_limits(request):
     """添加功能权限"""
-    if request.POST.get('lname','') and request.POST.get('limit',''):
+    if request.POST.get('lname', '') and request.POST.get('limit', ''):
         if not models.Limits.objects.filter(limit=request.POST['limit']):
-            newLimit = models.Limits(lname=request.POST['lname'],limit=request.POST['limit'])
+            newLimit = models.Limits(lname=request.POST['lname'], limit=request.POST['limit'])
             try:
                 newLimit.save()
             except DatabaseError as e:
@@ -95,20 +95,21 @@ def add_limits(request):
             result = {'response': '权限标识已存在'}
             return HttpResponse(json.dumps(result))
     else:
-        result = {'response':'权限描述与权限标识不能为空'}
+        result = {'response': '权限描述与权限标识不能为空'}
         return HttpResponse(json.dumps(result))
 
 
 def register(request):
     """用户注册功能"""
     if request.method == 'GET':
-        return render(request,'register.html')
+        return render(request, 'register.html')
     else:
-        if request.POST.get('uname','') and request.POST.get('password','') and request.POST.get('company',''):
+        if request.POST.get('uname', '') and request.POST.get('password', '') and request.POST.get('company', ''):
             if request.POST['password'] == request.POST['password_1']:
                 if not models.User.objects.filter(uname=request.POST['uname']):
-                    password = make_password(request.POST['password'],None,'pbkdf2_sha1')
-                    newUser = models.User(uname=request.POST['uname'],password=password,company_id=request.POST['company'])
+                    password = make_password(request.POST['password'], None, 'pbkdf2_sha1')
+                    newUser = models.User(uname=request.POST['uname'], password=password,
+                                          company_id=request.POST['company'])
                     try:
                         newUser.save()
                     except DatabaseError as e:
@@ -131,22 +132,28 @@ def register(request):
 def inquire_user(request):
     """用户查询"""
     users = models.User.objects.all()
-    if request.GET.get('uname',''):
+    if request.GET.get('uname', ''):
         users = users.filter(uname=request.GET['uname'])
-    if request.GET.get('is_active',''):
+    if request.GET.get('is_active', ''):
         users = users.filter(is_active=request.GET['is_active'])
-    if request.GET.get('company',''):
+    if request.GET.get('company', ''):
         users = users.filter(company=request.GET['company'])
-    return render(request,'inquire_users.html',locals())
+    # return render(request,'inquire_users.html',locals())
+    lusers = []
+    for user in users:
+        lusers.append({'id': user.id, 'uname': user.uname, 'company': user.company.cname,
+                       'is_active': user.is_active, 'ctime': user.ctime})
+    return JsonResponse({'users': lusers})
 
 
 def inquire_user_limit(request):
     """用户权限查询"""
-    id = request.GET.get('id','')
-    uname = request.GET.get('uname','')
-    company = request.GET.get('company','')
-    is_active = request.GET.get('is-active','')
+    id = request.GET.get('id', '')
+    uname = request.GET.get('uname', '')
+    company = request.GET.get('company', '')
+    is_active = request.GET.get('is-active', '')
     user = models.User.objects.get(id=id)
     ulimits = user.limits.all()
-    return render(request,'inquire_user_limit.html',locals())
+    return render(request, 'inquire_user_limit.html', locals())
+
 
