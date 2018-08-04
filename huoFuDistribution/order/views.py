@@ -155,3 +155,17 @@ def modify_orders_state(request):
     return HttpResponse(json.dumps(result))
 
 
+def modify_orders_remarks(request):
+    """修改订单备注"""
+    order = models.Order.objects.get(id=request.POST.get('id',''))
+    order.remarks = request.POST.get('remarks','')
+    try:
+        order.save()
+    except DatabaseError as e:
+        logging.warning(e)
+        result = {'response': '修改失败'}
+        return HttpResponse(json.dumps(result))
+    result = {'response': '修改成功'}
+    return HttpResponse(json.dumps(result))
+
+

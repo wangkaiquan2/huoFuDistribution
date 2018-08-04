@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^add-state/',views.add_state,name='add-state'),
     url(r'^inquire-state/',views.inquire_state,name='inquire-state'),
     url(r'^modify-orders-state/',views.modify_orders_state,name='modify_order_state'),
+    url(r'^modify-orders-remarks/',views.modify_orders_remarks,name='modify-orders-remarks'),
 ]
