@@ -2,6 +2,7 @@ import datetime
 
 from django.shortcuts import render, HttpResponse
 from django.db import DatabaseError
+from django.db.models import Q
 import logging
 import json
 
@@ -41,7 +42,7 @@ def inquire_state(request):
     lstates = []
     for state in states:
         lstates.append({
-            'id':state.id,
+            'id': state.id,
             'sname': state.sname,
             'state': state.state
         })
@@ -117,7 +118,7 @@ def inquire_order(request):
         else:
             state = '未接单'
         lorder.append({
-            'id':order.id,
+            'id': order.id,
             'company': order.company_id,
             'user': order.user_id,
             'order_number': order.order_number,
@@ -144,11 +145,13 @@ def modify_orders_state(request):
     order_states = []
     x = y = 0
     for order in orders:
-        if models.Order_State.objects.filter(order_id=order, state_id=state).exists():
+        if models.Order_State.objects.filter(order_id=order).filter(Q(state_id=state) | Q(state_id='5')).exists():
             x += 1
         else:
-            y += 1
             order_states.append(models.Order_State(order_id=order, state_id=state))
+            y += 1
     models.Order_State.objects.bulk_create(order_states)
     result = {'response': '重复数据' + str(x) + '条,' + '修改成功' + str(y) + '条'}
     return HttpResponse(json.dumps(result))
+
+
