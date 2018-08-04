@@ -138,6 +138,19 @@ def inquire_order(request):
     return HttpResponse(json.dumps(result))
 
 
+def inquire_order_state(request):
+    """查询订单壮态"""
+    order_states = models.Order_State.objects.filter(order_id=request.GET['id'])
+    lstates = []
+    for order_state in order_states:
+        lstates.append({
+            'ctime':str(order_state.ctime),
+            'state':order_state.state.sname
+        })
+    result = {'response': lstates}
+    return HttpResponse(json.dumps(result))
+
+
 def modify_orders_state(request):
     """修改订单壮态"""
     orders = request.POST.getlist('orders', '')
