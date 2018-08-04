@@ -263,7 +263,7 @@ def modify_password(request):
 
 
 def test_session(request):
-    """测试登陆session"""
+    """测试登陆sesson"""
     if request.session.get('id', '') and request.session.get('uname', '') and request.session.get('limits', ''):
         id = request.session['id']
         uname = request.session['uname']
