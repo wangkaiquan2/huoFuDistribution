@@ -27,6 +27,7 @@ class Order(models.Model):
     remarks = models.CharField('备注', max_length=512)
     consignee = models.CharField('收货人', max_length=18, null=False)
     tel = models.CharField('联系方式', max_length=36)
+    is_delete = models.BooleanField('是否删除',default=0)
 
     def __str__(self):
         return self.order_number

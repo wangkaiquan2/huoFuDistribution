@@ -13,20 +13,40 @@ def test(request):
     """测试通迅"""
     return HttpResponse('this is test oreder,is okay')
 
-    # company = models.ForeignKey(Company)
-    # user = models.ForeignKey(User)
-    # # p_order = models.CharField('主单号', max_length=18)
-    # order_number = models.CharField('订单号', max_length=18, null=False)
-    # shipper = models.CharField('发货人', max_length=18, null=False)
-    # quantity = models.IntegerField('数量', default=1)
-    # weight = models.FloatField('重量', default=0)
-    # volume = models.FloatField('体积', default=0)
-    # city = models.CharField('城市', max_length=9, null=False)
-    # address = models.CharField('地址', max_length=128, null=False)
-    # ctime = models.DateTimeField('创建时间', auto_now_add=True)
-    # remarks = models.CharField('备注', max_length=512)
-    # consignee = models.CharField('收货人', max_length=18, null=False)
-    # tel = models.CharField('联系方式', max_length=36)
+
+def add_state(request):
+    """添加订单壮态列表"""
+    if request.POST.get('sname', '') and request.POST.get('state', ''):
+        if models.State.objects.filter(state=request.POST['state']):
+            result = {'response': '新增壮态标识已存在,请重新输入'}
+            return HttpResponse(json.dumps(result))
+        else:
+            new_state = models.State(sname=request.POST['sname'], state=request.POST['state'])
+            try:
+                new_state.save()
+            except DatabaseError as e:
+                logging.warning(e)
+                result = {'response': '新增壮态失败'}
+                return HttpResponse(json.dumps(result))
+            result = {'response': '新增壮态成功,请刷新'}
+            return HttpResponse(json.dumps(result))
+    else:
+        result = {'response': '壮态标识与壮态描述不能为空'}
+        return HttpResponse(json.dumps(result))
+
+
+def inquire_state(request):
+    """查询数据库壮态列表"""
+    states = models.State.objects.all()
+    lstates = []
+    for state in states:
+        lstates.append({
+            'id':state.id,
+            'sname': state.sname,
+            'state': state.state
+        })
+    result = {'response': lstates}
+    return HttpResponse(json.dumps(result))
 
 
 def add_order(request):
@@ -58,7 +78,7 @@ def add_order(request):
 
 def inquire_order(request):
     """查询订单"""
-    orders = models.Order.objects.all()
+    orders = models.Order.objects.filter(is_delete=0)
     now = datetime.datetime.now()
     zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
                                          microseconds=now.microsecond)
@@ -68,8 +88,8 @@ def inquire_order(request):
     if request.GET.get('stime', '') and request.GET.get('etime', ''):
         stime = request.GET['stime']
         etime = request.GET['etime']
-        print('stime:',stime)
-        print('etime:',etime)
+        print('stime:', stime)
+        print('etime:', etime)
     orders = orders.filter(ctime__gte=stime).filter(ctime__lte=etime)
     if request.GET.get('order_number', ''):
         orders = orders.filter(order_number=request.GET['order_number'])
@@ -91,7 +111,13 @@ def inquire_order(request):
         orders = orders.filter(remarks=request.GET['remarks'])
     lorder = []
     for order in orders:
+        states = order.order_state_set.all()
+        if states:
+            state = states[len(states) - 1].state.sname
+        else:
+            state = '未接单'
         lorder.append({
+            'id':order.id,
             'company': order.company_id,
             'user': order.user_id,
             'order_number': order.order_number,
@@ -105,6 +131,24 @@ def inquire_order(request):
             'remarks': order.remarks,
             'consignee': order.consignee,
             'tel': order.tel,
+            'state': state,
         })
     result = {'response': lorder}
+    return HttpResponse(json.dumps(result))
+
+
+def modify_orders_state(request):
+    """修改订单壮态"""
+    orders = request.POST.getlist('orders', '')
+    state = request.POST.get('state', '')
+    order_states = []
+    x = y = 0
+    for order in orders:
+        if models.Order_State.objects.filter(order_id=order, state_id=state).exists():
+            x += 1
+        else:
+            y += 1
+            order_states.append(models.Order_State(order_id=order, state_id=state))
+    models.Order_State.objects.bulk_create(order_states)
+    result = {'response': '重复数据' + str(x) + '条,' + '修改成功' + str(y) + '条'}
     return HttpResponse(json.dumps(result))
