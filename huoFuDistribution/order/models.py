@@ -15,7 +15,7 @@ class Order(models.Model):
     """订单"""
     company = models.ForeignKey(Company)
     user = models.ForeignKey(User)
-    p_order = models.CharField('主单号', max_length=18)
+    # p_order = models.CharField('主单号', max_length=18)
     order_number = models.CharField('订单号', max_length=18, null=False)
     shipper = models.CharField('发货人', max_length=18, null=False)
     quantity = models.IntegerField('数量', default=1)
