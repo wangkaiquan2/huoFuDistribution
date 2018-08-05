@@ -28,12 +28,12 @@
     无人收货 7
 
 
-分页
+
 随机产生订单号
 权限验证
 外键在引用时使用的字段名需加_id
-多对多外键的增加(add),移除(remove)
-模型层使用DateTimeField等自动生成时间的字段产生本地时间:需要把settings内USE_TZ 设置为 False
+模型层使用DateTimeField等自动生成时间的字段生成本地时间:
+    需要把settings内USE_TZ 设置为 False
 响应json格式数据对象需要自行序列化
 
 向数据库内批量写入数据：
@@ -63,4 +63,10 @@
 判断一条数据在数据库内是否存在:exists()
     models.Order_State.objects.filter(order_id=order).exists()
 数据库查询时,一定要避免全部数据量的查询,使用默认筛选条件(日期，壮态等)
-查询几乎都要使用分页
+查询几乎都要使用分页:
+    paginators = Paginator(orders,1)
+    plist = paginators.page_range
+    page_number = 1
+    if request.GET.get('page_number',''):
+        page_number = int(request.GET['page_number'])
+权限验证

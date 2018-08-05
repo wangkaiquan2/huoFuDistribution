@@ -3,6 +3,7 @@ import datetime
 from django.shortcuts import render, HttpResponse
 from django.db import DatabaseError
 from django.db.models import Q
+from django.core.paginator import Paginator, InvalidPage, EmptyPage, PageNotAnInteger
 import logging
 import json
 
@@ -123,9 +124,19 @@ def inquire_order(request):
         orders = orders.filter(tel=request.GET['tel'])
     if request.GET.get('remarks', ''):
         orders = orders.filter(remarks=request.GET['remarks'])
+    paginators = Paginator(orders,1)
+    plist = paginators.page_range
+    page_number = 1
+    if request.GET.get('page_number',''):
+        page_number = int(request.GET['page_number'])
+    try:
+        pages = paginators.page(page_number)
+    except InvalidPage or PageNotAnInteger or EmptyPage as e:
+        logging.warning(e)
+        return HttpResponse('无效页码')
     lorder = []
     # 找出订单最后壮态
-    for order in orders:
+    for order in pages:
         states = order.order_state_set.all()
         if states:
             state = states[len(states) - 1].state.sname
@@ -148,7 +159,7 @@ def inquire_order(request):
             'tel': order.tel,
             'state': state,
         })
-    result = {'response': lorder}
+    result = {'orders': lorder,'plist':plist}
     return render(request, 'inquire_order.html', locals())
 
 
