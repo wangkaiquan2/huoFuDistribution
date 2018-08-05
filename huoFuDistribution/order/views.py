@@ -22,11 +22,14 @@ def index(request):
 
 def add_state(request):
     """添加订单壮态列表"""
+    # 判断壮态描述与壮态标识是否为空
     if request.POST.get('sname', '') and request.POST.get('state', ''):
+        # 判断壮态标识是事存在
         if models.State.objects.filter(state=request.POST['state']):
             result = {'response': '新增壮态标识已存在,请重新输入'}
             return HttpResponse(json.dumps(result))
         else:
+            # 新建新的壮态标识
             new_state = models.State(sname=request.POST['sname'], state=request.POST['state'])
             try:
                 new_state.save()
@@ -45,6 +48,7 @@ def inquire_state(request):
     """查询数据库壮态列表"""
     states = models.State.objects.all()
     lstates = []
+    # 序列化壮态信息
     for state in states:
         lstates.append({
             'id': state.id,
@@ -52,11 +56,12 @@ def inquire_state(request):
             'state': state.state
         })
     result = {'response': lstates}
-    return HttpResponse(json.dumps(result))
+    return render(request, 'inquire_state.html', locals())
 
 
 def add_order(request):
     """新增订单"""
+    # 获取订单相关数据
     company = request.POST['company']
     user = request.POST['user']
     order_number = request.POST['order_number']
@@ -69,6 +74,7 @@ def add_order(request):
     remarks = request.POST.get('remarks', '')
     consignee = request.POST['consignee']
     tel = request.POST['tel']
+    # 创建订单数据
     new_order = models.Order(company_id=company, user_id=user, order_number=order_number, shipper=shipper,
                              quantity=quantity, weight=weight, volume=volume, city=city, address=address,
                              remarks=remarks, consignee=consignee, tel=tel)
@@ -84,19 +90,21 @@ def add_order(request):
 
 def inquire_order(request):
     """查询订单"""
-    orders = models.Order.objects.filter(is_delete=0)
+    # 获取当前日期时间
     now = datetime.datetime.now()
-    zeroToday = now - datetime.timeda_inquire_limitselta(hours=now.hour, minutes=now.minute, seconds=now.second,
-                                                         microseconds=now.microsecond)
+    # 获取当日0点
+    zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
+                                         microseconds=now.microsecond)
+    # 获取当日最后一秒
     lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
+    # 默认筛选日期
     stime = zeroToday
     etime = lastToday
+    # 根据前端日期时间数据筛选
     if request.GET.get('stime', '') and request.GET.get('etime', ''):
         stime = request.GET['stime']
         etime = request.GET['etime']
-        print('stime:', stime)
-        print('etime:', etime)
-    orders = orders.filter(ctime__gte=stime).filter(ctime__lte=etime)
+    orders = models.Order.objects.filter(is_delete=0, ctime__gte=stime, ctime__lte=etime)
     if request.GET.get('order_number', ''):
         orders = orders.filter(order_number=request.GET['order_number'])
     if request.GET.get('shipper', ''):
@@ -116,6 +124,7 @@ def inquire_order(request):
     if request.GET.get('remarks', ''):
         orders = orders.filter(remarks=request.GET['remarks'])
     lorder = []
+    # 找出订单最后壮态
     for order in orders:
         states = order.order_state_set.all()
         if states:
@@ -140,35 +149,40 @@ def inquire_order(request):
             'state': state,
         })
     result = {'response': lorder}
-    return HttpResponse(json.dumps(result))
+    return render(request, 'inquire_order.html', locals())
 
 
 def inquire_order_state(request):
     """查询订单壮态"""
     order_states = models.Order_State.objects.filter(order_id=request.GET['id'])
     lstates = []
+    # 序列化订单壮态
     for order_state in order_states:
         lstates.append({
+            'id': order_state.id,
             'ctime': str(order_state.ctime),
             'state': order_state.state.sname
         })
     result = {'response': lstates}
-    return HttpResponse(json.dumps(result))
+    return render(request, 'inquire_order_state.html', locals())
 
 
 def modify_orders_state(request):
     """修改订单壮态"""
     orders = request.POST.getlist('orders', '')
     state = request.POST.get('state', '')
-    order_states = []
+    orders_state = []
     x = y = 0
+    # 批量修改订单壮态
     for order in orders:
-        if models.Order_State.objects.filter(order_id=order).filter(Q(state_id=state) | Q(state_id='5')).exists():
+        # 判断订单壮态是否为5且最后一壮态与要添加壮态是否相同
+        order_states = models.Order_State.objects.filter(order_id=order)
+        if order_states[len(order_states) - 1].state_id == state or order_states.filter(state_id='5'):
             x += 1
         else:
-            order_states.append(models.Order_State(order_id=order, state_id=state))
+            orders_state.append(models.Order_State(order_id=order, state_id=state))
             y += 1
-    models.Order_State.objects.bulk_create(order_states)
+    models.Order_State.objects.bulk_create(orders_state)
     result = {'response': '重复数据' + str(x) + '条,' + '修改成功' + str(y) + '条'}
     return HttpResponse(json.dumps(result))
 
@@ -176,6 +190,7 @@ def modify_orders_state(request):
 def modify_orders_remarks(request):
     """修改订单备注"""
     order = models.Order.objects.get(id=request.POST.get('id', ''))
+    # 获取并修改备注信息
     order.remarks = request.POST.get('remarks', '')
     try:
         order.save()
