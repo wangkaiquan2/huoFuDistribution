@@ -144,8 +144,8 @@ def inquire_order_state(request):
     lstates = []
     for order_state in order_states:
         lstates.append({
-            'ctime':str(order_state.ctime),
-            'state':order_state.state.sname
+            'ctime': str(order_state.ctime),
+            'state': order_state.state.sname
         })
     result = {'response': lstates}
     return HttpResponse(json.dumps(result))
@@ -170,8 +170,8 @@ def modify_orders_state(request):
 
 def modify_orders_remarks(request):
     """修改订单备注"""
-    order = models.Order.objects.get(id=request.POST.get('id',''))
-    order.remarks = request.POST.get('remarks','')
+    order = models.Order.objects.get(id=request.POST.get('id', ''))
+    order.remarks = request.POST.get('remarks', '')
     try:
         order.save()
     except DatabaseError as e:
@@ -180,5 +180,3 @@ def modify_orders_remarks(request):
         return HttpResponse(json.dumps(result))
     result = {'response': '修改成功'}
     return HttpResponse(json.dumps(result))
-
-
