@@ -257,6 +257,8 @@ def delete_user_limits(request):
 def login(request):
     """用户登陆功能"""
     # 判断用户名与密码是否为空
+    if request.method == 'GET':
+        return render(request,'login.html')
     if request.POST.get('uname', '') and request.POST.get('password', ''):
         user = models.User.objects.filter(uname=request.POST['uname'])
         # 判断用户名是否存在
