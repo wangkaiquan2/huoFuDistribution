@@ -35,3 +35,21 @@
 多对多外键的增加(add),移除(remove)
 模型层字段产生本地时间:需要把settings内USE_TZ 设置为 False
 响应json格式数据对象需要自行序列化
+
+向数据库内批量写入数据：
+    new_companys = []
+    new_companys.append(models.Company(cname=cname,number=number))
+    models.Company.objects.bulk_create(new_companys)
+字段关键字包含筛选：
+    __contains
+    companys = companys.filter(cname__contains=request.GET['cname'])
+表与表多对多关系批量添加数据：
+    request.POST.getlist('limits')
+    .add(*list)
+    批量删除数据：
+    request.POST.getlist('limits')
+    .remove(*list)
+登陆时将用户id,uname,limits均写入session内:
+    request.session['id'] = user[0].id
+退出登陆要删除session内用户相关信息:
+    del request.session['id']

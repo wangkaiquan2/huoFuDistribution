@@ -18,41 +18,52 @@ def add_company(request):
     if request.method == 'GET':
         return render(request, 'add_company.html')
     else:
-        if request.POST.get('cname', '') and request.POST.get('number', ''):
-            if models.Company.objects.filter(number=request.POST['number']):
-                result = {'rewponse': '企业编号已被使用'}
-                return HttpResponse(json.dumps(result))
+        # 获取企业数据
+        cnames = request.POST.getlist('cname')
+        numbers = request.POST.getlist('number')
+        new_companys = []
+        x = y = 0
+        # 批量创建企业并写入数据库内
+        for cname, number in cnames, numbers:
+            if cname and number:
+                if models.Company.objects.filter(number=number).exists():
+                    x += 1
+                else:
+                    new_companys.append(models.Company(cname=cname, number=number))
+                    y += 1
             else:
-                newCompany = models.Company(cname=request.POST['cname'], number=request.POST['number'])
-                try:
-                    newCompany.save()
-                    result = {'rewponse': '企业新增成功'}
-                    return HttpResponse(json.dumps(result))
-                except DatabaseError as e:
-                    logging.warning(e)
-                    result = {'rewponse': '企业新增失败,请重试'}
-                    return HttpResponse(json.dumps(result))
-        else:
-            result = {'response': '企业名或编号不能为空'}
-            return HttpResponse(json.dumps(result))
+                x += 1
+        models.Company.objects.bulk_create(new_companys)
+        result = {'rewponse': '新增企业成功' + str(y) + '条,' + '失败' + str(x) + '条'}
+        return HttpResponse(json.dumps(result))
 
 
 def inquire_companys(request):
     """筛选查询功能"""
     companys = models.Company.objects.all()
+    # 根据筛选条件进行关键字包含筛选数据
     if request.GET.get('cname', ''):
-        companys = companys.filter(cname=request.GET['cname'])
+        companys = companys.filter(cname__contains=request.GET['cname'])
     if request.GET.get('number', ""):
-        companys = companys.filter(number=request.GET['number'])
+        companys = companys.filter(number__contains=request.GET['number'])
     if request.GET.get('is_active', ''):
         companys = companys.filter(is_active=request.GET['is_active'])
-    # result = {'companys', companys}
+    lcompanys = []
+    # 序列化企业信息
+    for company in companys:
+        lcompanys.append({
+            'id': company.id,
+            'cname': company.cname,
+            'number': company.number,
+            'is_active': company.is_active
+        })
     return render(request, 'company.html', locals())
 
 
 def update_companys(request):
     """修改企业信息"""
     company = models.Company.objects.get(id=request.POST['company_id'])
+    # 根据获得的企业信息修改对应的企业信息
     if request.POST.get('cname', ''):
         company.cname = request.POST['cname']
     if request.POST.get('number', ''):
@@ -72,13 +83,40 @@ def update_companys(request):
 def inquire_limits(request):
     """查询功能权限列表"""
     limits = models.Limits.objects.all()
+    llimits = []
+    # 序列化权限列表
+    for limit in limits:
+        llimits.append({
+            'id': limit.id,
+            'lname': limit.lname,
+            'limit': limit.limit
+        })
+    result = {'response': llimits}
     return render(request, 'inquire_limits.html', locals())
+
+
+def a_inquire_limits(request):
+    """查询功能权限列表"""
+    limits = models.Limits.objects.all()
+    llimits = []
+    # 序列化权限列表
+    for limit in limits:
+        llimits.append({
+            'id': limit.id,
+            'lname': limit.lname,
+            'limit': limit.limit
+        })
+    result = {'response': llimits}
+    return HttpResponse(json.dumps(result))
 
 
 def add_limits(request):
     """添加功能权限"""
+    # 判断权限描述与权限标识是否为空
     if request.POST.get('lname', '') and request.POST.get('limit', ''):
+        # 判断权限标识是否存在
         if not models.Limits.objects.filter(limit=request.POST['limit']):
+            # 新增权限
             newLimit = models.Limits(lname=request.POST['lname'], limit=request.POST['limit'])
             try:
                 newLimit.save()
@@ -102,10 +140,15 @@ def register(request):
     if request.method == 'GET':
         return render(request, 'register.html')
     else:
+        # 判断用户选项是否为空
         if request.POST.get('uname', '') and request.POST.get('password', '') and request.POST.get('company', ''):
+            # 判断两次密码是否一致
             if request.POST['password'] == request.POST['password_1']:
+                # 判断用户名是否存在
                 if not models.User.objects.filter(uname=request.POST['uname']):
+                    # 密码加密
                     password = make_password(request.POST['password'], None, 'pbkdf2_sha1')
+                    # 新增用户
                     newUser = models.User(uname=request.POST['uname'], password=password,
                                           company_id=request.POST['company'])
                     try:
@@ -130,7 +173,9 @@ def register(request):
 def modify_user(request):
     """用户信息修改"""
     user = models.User.objects.get(id=request.POST.get('id', ''))
+    # 根据前端数据对相应的数据进行更改
     if request.POST.get('password', ''):
+        # 密码加密
         user.password = make_password(request.POST['password'], None, 'pbkdf2_sha1')
     if request.POST.get('is_active', ''):
         user.is_active = request.POST['is_active']
@@ -149,18 +194,18 @@ def modify_user(request):
 def inquire_user(request):
     """用户搜索筛选查询"""
     users = models.User.objects.all()
+    # 根据前端数据进行相应字段关键字包含筛选
     if request.GET.get('uname', ''):
-        users = users.filter(uname=request.GET['uname'])
+        users = users.filter(uname__contains=request.GET['uname'])
     if request.GET.get('is_active', ''):
         users = users.filter(is_active=request.GET['is_active'])
     if request.GET.get('company', ''):
-        users = users.filter(company=request.GET['company'])
-    # return render(request,'inquire_users.html',locals())
+        users = users.filter(company__contains=request.GET['company'])
     lusers = []
     for user in users:
         lusers.append({'id': user.id, 'uname': user.uname, 'company': user.company.cname,
                        'is_active': user.is_active, 'ctime': user.ctime})
-    return JsonResponse({'users': lusers})
+    return render(request, 'inquire_users.html', locals())
 
 
 def inquire_user_limit(request):
@@ -172,9 +217,10 @@ def inquire_user_limit(request):
     user = models.User.objects.get(id=id)
     ulimits = user.limits.all()
     limits = []
+    # 手动序列化用户权限信息
     for ulimit in ulimits:
         limits.append({'lname': ulimit.lname, 'limit': ulimit.limit})
-    return JsonResponse({'id': id, 'uname': uname, 'company': company, 'is_active': is_active, 'ulimits': limits})
+    return render(request, 'inquire_user_limit.html', locals())
 
 
 def add_user_limits(request):
@@ -182,9 +228,10 @@ def add_user_limits(request):
     if request.method == 'GET':
         return render(request, 'add_user_limits.html')
     else:
+        # 判断用户id与权限id是否为空
         if request.POST.get('id', '') and request.POST.get('limits', ''):
             user = models.User.objects.get(id=request.POST['id'])
-            print('limits:', request.POST.getlist('limits'))
+            # 表与表多对多关系批量增加数据
             try:
                 user.limits.add(*request.POST.getlist('limits'))
             except DatabaseError as e:
@@ -201,7 +248,7 @@ def add_user_limits(request):
 def delete_user_limits(request):
     """删除用户权限"""
     user = models.User.objects.get(id=request.POST.get('id', ''))
-    print(user)
+    # 表与表多对多关系，批量移除数据
     user.limits.remove(*request.POST.getlist('limits', ''))
     result = {'response': '删除权限成功'}
     return HttpResponse(json.dumps(result))
@@ -209,21 +256,21 @@ def delete_user_limits(request):
 
 def login(request):
     """用户登陆功能"""
+    # 判断用户名与密码是否为空
     if request.POST.get('uname', '') and request.POST.get('password', ''):
         user = models.User.objects.filter(uname=request.POST['uname'])
+        # 判断用户名是否存在
         if user:
+            # 判断密码是否正确
             if check_password(request.POST['password'], user[0].password):
+                # 序列化权限列表
                 limits = []
                 for limit in user[0].limits.all():
-                    print('limit.limit:', limit.limit)
                     limits.append(limit.limit)
-                print('limits:', limits)
+                    # 将用户id,uname,limits写入session内
                 request.session['id'] = user[0].id
-                print(user[0].id)
                 request.session['uname'] = user[0].uname
-                print(user[0].uname)
                 request.session['limits'] = limits
-                print(limits)
                 return render(request, 'index.html')
             else:
                 result = {'response': '用户名或密码错误'}
@@ -238,10 +285,14 @@ def login(request):
 
 def modify_password(request):
     """修改密码"""
+    # 判断选项是否为空
     if request.POST.get('password', '') and request.POST.get('password_1', '') and request.POST.get('password_2', ''):
+        # 判断二次密码是否一致
         if request.POST['password_1'] == request.POST['password_2']:
             user = models.User.objects.get(id=request.session['id'])
+            # 判断旧密码是否正确
             if check_password(request.POST['password'], user.password):
+                # 新密码加密并修改
                 user.password = make_password(request.POST['password_1'], None, 'pbkdf2_sha1')
                 try:
                     user.save()
@@ -276,12 +327,12 @@ def test_session(request):
 
 def quit(request):
     """用户退出"""
+    # 判断用户是否登陆
     if request.session.get('id', '') and request.session.get('uname', '') and request.session.get('limits', ''):
+        # 删除用户登陆相应session
         del request.session['id']
         del request.session['uname']
         del request.session['limits']
         return redirect('/user/login')
-        # return render(request, 'index.html')
     else:
         return redirect('/user/login')
-        # return render(request, 'index.html')

@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^inquire-companys/',views.inquire_companys,name='inquire-companys'),
     url(r'^update-companys/',views.update_companys,name='update-companys'),
     url(r'^inquire-limits/',views.inquire_limits,name='inquire-limits'),
+    url(r'^a-inquire-limits/',views.a_inquire_limits,name='a-inquire-limits'),
     url(r'^add-limits/',views.add_limits,name='add-limits'),
     url(r'^register/',views.register,name='register'),
     url(r'^modify-user/',views.modify_user,name='modify-user'),

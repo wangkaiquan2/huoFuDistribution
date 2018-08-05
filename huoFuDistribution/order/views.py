@@ -15,6 +15,11 @@ def test(request):
     return HttpResponse('this is test oreder,is okay')
 
 
+def index(request):
+    """主页"""
+    return render(request, 'index.html')
+
+
 def add_state(request):
     """添加订单壮态列表"""
     if request.POST.get('sname', '') and request.POST.get('state', ''):
@@ -81,8 +86,8 @@ def inquire_order(request):
     """查询订单"""
     orders = models.Order.objects.filter(is_delete=0)
     now = datetime.datetime.now()
-    zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
-                                         microseconds=now.microsecond)
+    zeroToday = now - datetime.timeda_inquire_limitselta(hours=now.hour, minutes=now.minute, seconds=now.second,
+                                                         microseconds=now.microsecond)
     lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
     stime = zeroToday
     etime = lastToday
