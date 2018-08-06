@@ -11,11 +11,6 @@ from user.models import User, Limits, Company
 from order import models
 
 
-def test(request):
-    """测试通迅"""
-    return HttpResponse('this is test oreder,is okay')
-
-
 def index(request):
     """主页"""
     return render(request, 'index.html')
@@ -124,10 +119,10 @@ def inquire_order(request):
         orders = orders.filter(tel=request.GET['tel'])
     if request.GET.get('remarks', ''):
         orders = orders.filter(remarks=request.GET['remarks'])
-    paginators = Paginator(orders,1)
+    paginators = Paginator(orders, 1)
     plist = paginators.page_range
     page_number = 1
-    if request.GET.get('page_number',''):
+    if request.GET.get('page_number', ''):
         page_number = int(request.GET['page_number'])
     try:
         pages = paginators.page(page_number)
@@ -159,7 +154,7 @@ def inquire_order(request):
             'tel': order.tel,
             'state': state,
         })
-    result = {'orders': lorder,'plist':plist}
+    result = {'orders': lorder, 'plist': plist}
     return render(request, 'inquire_order.html', locals())
 
 

@@ -8,11 +8,6 @@ from django.http import JsonResponse
 from user import models
 
 
-def test(request):
-    """测试通迅"""
-    return HttpResponse('this is test user,okay')
-
-
 def add_company(request):
     """增加企业"""
     if request.method == 'GET':
@@ -21,10 +16,12 @@ def add_company(request):
         # 获取企业数据
         cnames = request.POST.getlist('cname')
         numbers = request.POST.getlist('number')
+        # 生成由cnames,numbers组合的ZIP对象用于迭代
+        cnames_numbers = zip(cnames, numbers)
         new_companys = []
         x = y = 0
         # 批量创建企业并写入数据库内
-        for cname, number in cnames, numbers:
+        for cname, number in cnames_numbers:
             if cname and number:
                 if models.Company.objects.filter(number=number).exists():
                     x += 1
@@ -193,6 +190,7 @@ def modify_user(request):
 
 def inquire_user(request):
     """用户搜索筛选查询"""
+    print('inquire_user')
     users = models.User.objects.all()
     # 根据前端数据进行相应字段关键字包含筛选
     if request.GET.get('uname', ''):
@@ -210,6 +208,7 @@ def inquire_user(request):
 
 def inquire_user_limit(request):
     """用户权限查询"""
+    print('inquire_user_limit')
     id = request.GET.get('id', '')
     uname = request.GET.get('uname', '')
     company = request.GET.get('company', '')
@@ -258,7 +257,7 @@ def login(request):
     """用户登陆功能"""
     # 判断用户名与密码是否为空
     if request.method == 'GET':
-        return render(request,'login.html')
+        return render(request, 'login.html')
     if request.POST.get('uname', '') and request.POST.get('password', ''):
         user = models.User.objects.filter(uname=request.POST['uname'])
         # 判断用户名是否存在
